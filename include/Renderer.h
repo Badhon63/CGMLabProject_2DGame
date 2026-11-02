@@ -10,7 +10,7 @@ public:
     bool init();
     void cleanup();
 
-    unsigned int loadTexture(const char* filepath);
+    unsigned int loadTexture(const char* filepath, bool linear = false);
     void drawQuad(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection,
                   const glm::vec4& color, bool useTexture, const glm::vec4& uvRect, unsigned int textureID, bool discardAlpha = true);
     void drawCircle(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection,

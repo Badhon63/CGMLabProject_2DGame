@@ -22,8 +22,14 @@
 // -----------------------------------------------------------------------------
 // Global Game State
 // -----------------------------------------------------------------------------
-GameState currentGameState = STATE_INTRO_VIDEO;
+GameState currentGameState = STATE_INTRO_SPLASH;
 std::string gameOverReason = "";
+
+// Splash Screen Configuration (Rendered Graphically in Engine)
+float splashTimer                  = 0.0f;
+const float SPLASH_TOTAL_DURATION  = 5.5f;
+const float SPLASH_FADE_IN_TIME    = 1.0f;
+const float SPLASH_FADE_OUT_TIME   = 1.0f;
 
 // Global Character Set (Samurai Mack)
 CharacterAnimSet samuraiAnim;
@@ -180,6 +186,7 @@ glm::vec2 cameraPos(0.0f, 0.0f);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, float deltaTime);
 void resetGame();
+void startIntroVideo();
 void triggerRandomDirectionShift(const std::string& sourceName, RunDirection forcedDir = (RunDirection)-1);
 void setEnvironmentTheme(EnvironmentTheme theme);
 void setSceneryTheme(SceneryTheme theme);
@@ -435,6 +442,22 @@ void resetGame()
     currentGameState = STATE_RUNNING;
 }
 
+void startIntroVideo()
+{
+    currentGameState = STATE_INTRO_VIDEO;
+    if (!introVideoPlayer.open(L"assets/introVid.mp4")) {
+        std::cerr << "Notice: Intro video not found or failed to load. Skipping intro." << std::endl;
+        currentGameState = STATE_RUNNING;
+        isGameIdleAtStart = true;
+        if (!hasShownInitialTutorial) {
+            showTutorialModal = true;
+            hasShownInitialTutorial = true;
+            tutorialOpenedFromPause = false;
+        }
+        audioMgr.startBGM();
+    }
+}
+
 // -----------------------------------------------------------------------------
 // Main Entry Point
 // -----------------------------------------------------------------------------
@@ -548,19 +571,9 @@ int main()
 
     resetGame();
 
-    // Initialize & Start Intro Video Player
-    currentGameState = STATE_INTRO_VIDEO;
-    if (!introVideoPlayer.open(L"assets/introVid.mp4")) {
-        std::cerr << "Notice: Intro video not found or failed to load. Skipping intro." << std::endl;
-        currentGameState = STATE_RUNNING;
-        isGameIdleAtStart = true;
-        if (!hasShownInitialTutorial) {
-            showTutorialModal = true;
-            hasShownInitialTutorial = true;
-            tutorialOpenedFromPause = false;
-        }
-        audioMgr.startBGM();
-    }
+    // Initialize Intro Splash Screen (runs graphically before intro video)
+    currentGameState = STATE_INTRO_SPLASH;
+    splashTimer = 0.0f;
 
     float lastFrameTime = static_cast<float>(glfwGetTime());
     float titleUpdateTimer = 0.0f;
@@ -681,6 +694,43 @@ int main()
         }
 
         processInput(window, deltaTime);
+
+        // ---------------------------------------------------------------------
+        // Intro Splash Screen Playback & Rendering
+        // ---------------------------------------------------------------------
+        if (currentGameState == STATE_INTRO_SPLASH) {
+            splashTimer += rawDeltaTime;
+            if (splashTimer >= SPLASH_TOTAL_DURATION) {
+                startIntroVideo();
+            } else {
+                float fadeAlpha = 1.0f;
+                if (splashTimer < SPLASH_FADE_IN_TIME) {
+                    fadeAlpha = splashTimer / SPLASH_FADE_IN_TIME;
+                } else if (splashTimer > (SPLASH_TOTAL_DURATION - SPLASH_FADE_OUT_TIME)) {
+                    fadeAlpha = (SPLASH_TOTAL_DURATION - splashTimer) / SPLASH_FADE_OUT_TIME;
+                }
+                fadeAlpha = glm::clamp(fadeAlpha, 0.0f, 1.0f);
+
+                glClearColor(0.02f, 0.02f, 0.03f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT);
+
+                glUseProgram(gameRenderer.getProgram());
+
+                int curFbW = 0, curFbH = 0;
+                glfwGetFramebufferSize(window, &curFbW, &curFbH);
+                float aspect = (curFbH > 0) ? (static_cast<float>(curFbW) / static_cast<float>(curFbH)) :
+                               (static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT));
+                float halfH = 6.8f;
+                float halfW = halfH * aspect;
+
+                float progress = splashTimer / SPLASH_TOTAL_DURATION;
+                UIManager::instance().renderSplashScreen(halfW, halfH, fadeAlpha, progress);
+
+                glfwSwapBuffers(window);
+                glfwPollEvents();
+                continue;
+            }
+        }
 
         // ---------------------------------------------------------------------
         // Intro Video Playback & Cinematic Rendering
@@ -2546,11 +2596,30 @@ void processInput(GLFWwindow* window, float deltaTime)
     }
     tutDismissLast = false;
 
+    // Intro Splash Screen Input: Press Space, Enter, or Esc to advance to Intro Video
+    static bool splashSkipLast = false;
+    static bool videoSkipLast  = false;
+    if (currentGameState == STATE_INTRO_SPLASH) {
+        bool skipPressed = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS ||
+                            glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS ||
+                            glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS);
+        if (skipPressed && !splashSkipLast) {
+            startIntroVideo();
+            videoSkipLast = true; // Key held to skip splash cannot dismiss or skip video!
+            splashSkipLast = true;
+            return;
+        }
+        splashSkipLast = skipPressed;
+        return;
+    }
+    splashSkipLast = false;
+
     // Intro Video Input: Press Space, Enter, or Esc to skip intro
     if (currentGameState == STATE_INTRO_VIDEO) {
-        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS ||
-            glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS ||
-            glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        bool skipPressed = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS ||
+                            glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS ||
+                            glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS);
+        if (skipPressed && !videoSkipLast) {
             introVideoPlayer.skip();
             introVideoPlayer.close();
             currentGameState = STATE_RUNNING;
@@ -2563,10 +2632,13 @@ void processInput(GLFWwindow* window, float deltaTime)
                 tutDismissLast = true; // Key held to skip video cannot dismiss tutorial
             }
             audioMgr.startBGM();
+            videoSkipLast = true;
             return;
         }
+        videoSkipLast = skipPressed;
         return;
     }
+    videoSkipLast = false;
 
     // ESC Key Toggle Pause
     bool escPressed = (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS);

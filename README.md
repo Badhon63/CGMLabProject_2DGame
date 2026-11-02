@@ -69,7 +69,7 @@ build\main.exe
 - **`M`**: **Mute / Unmute Background Music** — Toggles looping background music (`Quarter_in_the_Slot.mp3`, default 50% volume) with real-time HUD notification.
 - **`J` / `X` / `Left Mouse Click`**: **Sword Slash Attack** — Swing katana to defeat Bringer of Death (1 hit), Initial Slime (2 hits), and Demon Slime Boss (5 hits)!
 - **`Right Mouse Click` / `K`**: **Defend / Parry Stance** — Raise katana in defensive guard for up to 1.0s using `Defend_nobg.png`! Absorbs all enemy attacks (Slime, Bringer of Death scythe, Thunder cloud spell, Demon Boss cleave/smash) with a resonant metallic parry clang (`SFX_BLOCK`), floating `[PARRY]` text, and 0.6s grace invulnerability (2.0s cooldown on deflection).
-- **`Space` / `Esc` / `Enter` (During Intro)**: **Skip Intro Video** — Immediately interrupt the opening cinematic and advance to game spawn with tutorial modal.
+- **`Space` / `Esc` / `Enter` (During Intro Splash & Video)**: **Skip Intro Screen & Video** — Instantly advance from the academic course/group intro splash screen or skip the cinematic video directly into gameplay.
 - **`Left Shift`**: **Dash Movement** — High-speed burst with ghost trail afterimages and spike/hazard invulnerability!
 - **`Space` / `W` / `Up Arrow`**: Jump across gaps and over spiky traps, or latch on and climb upward inside ladder shafts
 - **`S` / `Down Arrow`**: Drop down through one-way platforms or descend into underground ladder shafts

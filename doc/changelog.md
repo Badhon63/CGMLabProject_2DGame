@@ -12,6 +12,9 @@ All entries in this changelog map directly to session archives recorded in [`/do
 
 | Release Version | Session Version | Date | Core Milestone / Focus |
 |---|---|---|---|
+| **v0.7.2** | [v7.2](#v72---render-academic-splash-screen-graphically-in-opengl-and-purge-bitmap-texture) | 2026-11-02 | Procedural Graphical Splash Screen: 100% Vector/Text Rendering in Modern OpenGL, Tables & Borders, Zero Disk Image Dependency |
+| **v0.7.1** | [v7.1](#v71---fix-opengl-header-order-conflict-in-msys2-and-restore-splash-screen-build) | 2026-11-02 | Build Fix: Resolved `#error OpenGL header already included` in MSYS2 by Ordering `<glad/glad.h>` Before `<GLFW/glfw3.h>` and Adding `GLFW_INCLUDE_NONE` |
+| **v0.7.0** | [v7.0](#v70---academic-intro-splash-screen-with-course-and-group-details-and-fade-transition) | 2026-11-02 | Academic Intro Splash Screen: Pre-Video Fade In-Out Proposal Presentation (Course CSE0611328, Faculty & Student Details), Bilinear Filtering & Fallback Procedural UI |
 | **v0.6.16** | [v6.0](#v60---fix-build--run-commands-makefile-pipeline-and-cmake-specification) | 2026-10-26 | Build System & Quick Start Fix: Decoupled Build/Run Targets in Makefile, Restored CMakeLists.txt Modern Subsystems, Bundled msys-2.0.dll & Provided Robust Shell-Agnostic Commands |
 | **v0.6.15** | [v5.15](#v515---boss-demon-slime-death-animation-calibration-to-match-updated-dying-roar-audio) | 2026-10-26 | Boss Demon Slime Death Animation Calibration: Slowed `05_d_death.gif` to 6.0 FPS (3.67s) & Extended Despawn Timer to 4.0s Synchronized with 3.96s `dyingRoar.mp3` |
 | **v0.6.14** | [v5.14](#v514---slime-ground-placement--ai-unfreezing-and-boss-demon-slime-dying-roar-audio-integration) | 2026-10-26 | Slime Ground Placement & AI Unfreezing, and Boss Demon Slime Dying Roar Audio Integration (`dyingRoar.mp3` for `05_d_death.gif`) |
@@ -59,6 +62,39 @@ All entries in this changelog map directly to session archives recorded in [`/do
 ---
 
 ## Detailed Version Logs
+
+### [v0.7.2] - 2026-11-02
+#### Session Archive: [`v7.2 - Render Academic Splash Screen Graphically in OpenGL and Purge Bitmap Texture.md`](/doc/prompts/v7.2%20-%20Render%20Academic%20Splash%20Screen%20Graphically%20in%20OpenGL%20and%20Purge%20Bitmap%20Texture.md)
+* **100% Procedural Graphical Splash Screen (No Texture Loading)**:
+  - Eliminated bitmap disk dependency by removing `assets/splash.png` from the rendering pipeline, memory allocation, and distribution packages.
+  - Re-architected `UIManager::renderSplashScreen(halfW, halfH, fadeAlpha, progress)` to render all visual components purely through modern OpenGL primitives:
+    - **Vector Quads & Borders**: Center presentation card ($15.6\,\text{m} \times 8.6\,\text{m}$), cyan top accent stripe, outer frame, and drop shadow.
+    - **Header Formatting & Underlines**: Centered course title `"Computer Graphics & Multimedia Lab"` (Ice Cyan) and `"Project Proposal"` (Gold) with an underline vector quad.
+    - **Course Metadata**: `"Course Title : Computer Graphics & Multimedia Lab"` and `"Course Code  : CSE0611328"` with highlighted amber code.
+    - **Procedural Table Grids**: Vector line drawing for faculty and student group tables (outer frames, header row fill, column partition lines, and row dividing borders).
+    - **Faculty Credentials**: Assistant Professor Engineer Robiul Islam and Lecturer Tasneen Tanvir in tabular grid format.
+    - **Student Group Details**: Gaus Saraf Murady (`0432410005101088`), Lima Akter (`0432410005101063`), and Fahima Akter (`0432410005101093`).
+    - **Footer Information**: Semester (Autumn 2026), Batch (55), and Department (CSE) with emerald highlights.
+  - Eliminated `splashTextureID` from `src/main.cpp`, saving VRAM and avoiding file I/O latency on game launch.
+
+### [v0.7.1] - 2026-11-02
+#### Session Archive: [`v7.1 - Fix OpenGL Header Order Conflict in MSYS2 and Restore Splash Screen Build.md`](/doc/prompts/v7.1%20-%20Fix%20OpenGL%20Header%20Order%20Conflict%20in%20MSYS2%20and%20Restore%20Splash%20Screen%20Build.md)
+* **OpenGL Header Conflict Resolution in MSYS2**:
+  - Diagnosed compilation error when invoking `make win`: `fatal error: #error OpenGL header already included, remove this include, glad already provides it`.
+  - In MSYS2 GCC environments, `<GLFW/glfw3.h>` defaults to including the system `<GL/gl.h>` unless told otherwise. Because `include/Common.h` included `GLFW/glfw3.h` before `glad/glad.h`, GLAD detected that `__gl_h_` was already defined and aborted compilation.
+  - Reordered includes in `[/include/Common.h](/include/Common.h)` so that `#include <glad/glad.h>` precedes GLFW, and explicitly defined `#define GLFW_INCLUDE_NONE`.
+  - Validated clean compilation under both MSYS2 `make win` and MinGW `mingw32-make build`, ensuring the updated binary `build/main.exe` is generated and launches the intro splash screen as expected.
+
+### [v0.7.0] - 2026-11-02
+#### Session Archive: [`v7.0 - Academic Intro Splash Screen with Course and Group Details and Fade Transition.md`](/doc/prompts/v7.0%20-%20Academic%20Intro%20Splash%20Screen%20with%20Course%20and%20Group%20Details%20and%20Fade%20Transition.md)
+* **Academic Intro Splash Screen**:
+  - **Pre-Video Cinematic Sequence**: Introduced `STATE_INTRO_SPLASH` (Game State 0) executing seamlessly before the opening intro video (`STATE_INTRO_VIDEO`).
+  - **Academic Proposal Card Details**: Features the official Computer Graphics & Multimedia Lab project proposal card with course information, faculty details (Assistant Professor Engineer Robiul Islam, Lecturer Tasneen Tanvir), student group member names and IDs (Gaus Saraf Murady `0432410005101088`, Lima Akter `0432410005101063`, Fahima Akter `0432410005101093`), Semester (Autumn 2026), Batch (55), and Department (CSE).
+  - **Fade In-Out Transition**: Built smooth alpha interpolation ($1.0\,\text{s}$ fade-in from pure black, $3.5\,\text{s}$ hold, $1.0\,\text{s}$ fade-out to black) driving both quad alpha and text transparency via standard OpenGL alpha blending (`GL_SRC_ALPHA`, `GL_ONE_MINUS_SRC_ALPHA`).
+  - **Bilinear Filtering (`GL_LINEAR`) for Textures**: Extended `Renderer::loadTexture(filepath, bool linear = false)` to support bilinear texture filtering for high-density document rendering while preserving crisp `GL_NEAREST` filtering for 2D pixel-art spritesheets.
+  - **Procedural UI Fallback**: Added a comprehensive procedural vector/text fallback card in `UIManager::renderSplashScreen` rendering the complete academic proposal details via `gameRenderer.drawText` and framed quads if the texture is missing.
+  - **Seamless Control & Key Debounce**: Equipped with interactive skip handling via `[SPACE]`, `[ESC]`, or `[ENTER]`. Keypresses transition into the intro video with strict debounce protection (`videoSkipLast = true`), preventing accidental skip bleed-through into subsequent scenes.
+  - **VRAM Lifecycle Management**: Automatically unloads and deletes the splash texture (`glDeleteTextures`) immediately upon transitioning into video playback or game exit to eliminate memory waste.
 
 ### [v0.6.16] - 2026-10-26
 #### Session Archive: [`v6.0 - Fix Build & Run Commands, Makefile Pipeline, and CMake Specification.md`](/doc/prompts/v6.0%20-%20Fix%20Build%20%26%20Run%20Commands,%20Makefile%20Pipeline,%20and%20CMake%20Specification.md)

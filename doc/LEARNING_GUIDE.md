@@ -25,6 +25,7 @@ Welcome to **The Wenderer** project! This guide is written in clear, simple lang
    - [Phase 4: Game States & Deployment](#phase-4-game-states--deployment)
    - [Phase 5: Mini-Game Scene State Machine, Dash Trails & Dynamic Direction Mini-Games](#phase-5-mini-game-scene-state-machine-dash-trails--dynamic-direction-mini-games)
    - [Phase 6: Real-Time Combat System, Hitbox Sweeps, 3 Lives, Roaming Enemies & Demon Slime Boss Battle](#17-real-time-combat-systems-hitbox-arc-sweeps-3-lives-health-pipeline--boss-state-machines-v060)
+   - [Phase 7: Cinematic Sequencing, Academic Intro Splash Screen & Dual Filtering Pipelines](#18-cinematic-sequencing-academic-intro-splash-screen--dual-filtering-pipelines-v070)
 6. [Quick Reference & Math Cheatsheet](#6-quick-reference--math-cheatsheet)
 
 ---
@@ -718,6 +719,27 @@ Instead of flat, plain-color geometric rectangles, the world is constructed from
     - **Telegraph Windup & Audio Event Pre-Alignment**:
       - Complex audio files often feature a preamble or build-up (such as the initial electrical crackle in `thunder-after-crackle.mp3` before the explosive bass thunderclap at $t \approx 1.1\text{s}$).
       - Rather than playing sound when the impact occurs, the audio trigger is advanced to the start of the enemy's casting wind-up (`ENEMY_STATE_CAST`). As the Bringer of Death raises its scythe and channels dark lightning for $\sim 1.0\text{s}$, the audio crackle intensifies, so the sudden thunder boom coincides with the appearance of the lethal ground cloud strike.
+
+---
+
+### 18. Cinematic Sequencing, Academic Intro Splash Screen & Dual Filtering Pipelines (v0.7.0)
+
+#### Pre-Video Academic Splash Presentation
+In academic capstone and lab submissions, displaying course context, university affiliation, instructors, and group members before gameplay establishes formal project provenance.
+- **State Machine Integration**: Added `STATE_INTRO_SPLASH` as initial state 0.
+- **Visual Staging**: Renders on a dark academic studio backdrop (`glClearColor(0.02f, 0.02f, 0.03f, 1.0f)`) with a centered document card, glowing drop shadow, and clean cyan border.
+- **Fade Transition Mathematics**:
+  Using normalized linear interpolation between time boundaries:
+  $$\alpha(t) = \begin{cases} \frac{t}{T_{\text{in}}} & 0 \le t < T_{\text{in}} \\ 1.0 & T_{\text{in}} \le t \le T_{\text{total}} - T_{\text{out}} \\ \frac{T_{\text{total}} - t}{T_{\text{out}}} & T_{\text{total}} - T_{\text{out}} < t \le T_{\text{total}} \end{cases}$$
+  where $T_{\text{in}} = 1.0\text{s}$, $T_{\text{total}} = 5.5\text{s}$, and $T_{\text{out}} = 1.0\text{s}$.
+- **Dual Texture Filtering Pipeline**:
+  - Pixel art sprites require `GL_NEAREST` to prevent blurry edges.
+  - High-density document textures (like the proposal sheet) require `GL_LINEAR` (bilinear interpolation) to avoid harsh aliasing and moiré artifacts on small text characters.
+  - `Renderer::loadTexture(filepath, bool linear = false)` enables selecting the filter per asset while preserving zero overhead for existing spritesheets.
+- **Procedural UI Fallback**:
+  If the texture asset `assets/splash.png` is unavailable, `UIManager::renderSplashScreen` automatically switches to an in-engine vector card rendering all course details, faculty listings, and student IDs using `Renderer::drawText` and colored quads.
+- **Audio Lifecycle Decoupling**:
+  `VideoPlayer::open()` immediately initiates audio playback via Windows Multimedia (`PlaySoundA`). By deferring `introVideoPlayer.open()` until the splash screen completes, audio desynchronization and audio overlapping are completely eliminated.
 
 ---
 
