@@ -178,12 +178,17 @@ Implements Modern OpenGL 3.3 Core Profile graphics:
 ---
 
 ### 3.7 UI & Mini-Game Subsystems
-- **`UIManager`**:
+- **`UIManager` ([`/src/UIManager.cpp`](/src/UIManager.cpp) & [`/include/UIManager.h`](/include/UIManager.h))**:
   - Thread-safe singleton managing the score counter, coin meter, distance tracking, 3 animated heart life pips, Guard status badge, overhead segmented enemy health bars, floating combat text, and glassmorphic modals.
-- **`LadderScene` & `SkyFallScene`**:
-  - Vertical 3-track climbing trial and aerial free-fall diving trial. Both include real-time survival countdown badges (`SURVIVE UNTIL EXIT: XX.Xs`), exit announcement banners, and direction arrow relic gates.
-- **`VideoPlayer`**:
-  - Decodes `intro.mp4` via Microsoft Media Foundation directly into an OpenGL texture with presentation timestamp synchronization.
+  - **Procedural Academic Splash Screen ([`/src/UIManager.cpp#L68-L230`](/src/UIManager.cpp#L68-L230))**:
+    - Pre-video formal academic proposal presentation card ($15.6\,\text{m} \times 8.6\,\text{m}$) rendered 100% through Modern OpenGL primitives and embedded 8x8 font ([`/include/font8x8_basic.h`](/include/font8x8_basic.h)).
+    - Displays course metadata (*CSE0611328*), faculty credentials (*Engineer Robiul Islam* & *Tasneen Tanvir*), and student group details (*Gaus Saraf Murady*, *Lima Akter*, *Fahima Akter*) with smooth alpha fade in/out transitions ($\alpha(t) = \frac{t}{T_{\text{in}}}$), matching the official project metadata at the top of [`/README.md`](/README.md).
+- **`LadderScene` & `SkyFallScene` ([`/src/LadderScene.cpp`](/src/LadderScene.cpp) & [`/src/SkyFallScene.cpp`](/src/SkyFallScene.cpp))**:
+  - Vertical 3-track climbing trial and aerial free-fall diving trial. Both include real-time survival countdown badges (`SURVIVE UNTIL EXIT: XX.Xs`), exit announcement banners, and direction arrow relic gates ([`/src/LadderScene.cpp#L74-L78`](/src/LadderScene.cpp#L74-L78) and [`/src/SkyFallScene.cpp#L98-L108`](/src/SkyFallScene.cpp#L98-L108)) returning the player safely to the platformer runner.
+- **Direction Arrowhead Relics ([`/src/main.cpp#L1230-L1246`](/src/main.cpp#L1230-L1246))**:
+  - Clear glowing arrow symbols ([`getDirectionArrowUV`](/include/Common.h#L314)) with pulsating colored auras (`DIR_LEFT`: Orange, `DIR_RIGHT`: Cyan, `DIR_UP`: Green, `DIR_DOWN`: Gold) that trigger autonomous direction switches and dimension transitions.
+- **`VideoPlayer` ([`/src/VideoPlayer.cpp`](/src/VideoPlayer.cpp) & [`/include/VideoPlayer.h`](/include/VideoPlayer.h))**:
+  - Decodes `introVid.mp4` via Microsoft Media Foundation directly into an OpenGL texture with presentation timestamp synchronization and instant skip controls.
 
 ---
 

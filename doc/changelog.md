@@ -12,6 +12,8 @@ All entries in this changelog map directly to session archives recorded in [`/do
 
 | Release Version | Session Version | Date | Core Milestone / Focus |
 |---|---|---|---|
+| **v0.7.4** | [v8.3](#v83---comprehensive-code-contexts-and-documentation-synchronization) | 2026-11-05 | Documentation & Code Context Synchronization: Embedded Root-Relative Code Contexts, Viva Q&A Expansion & Modern Subsystem Mapping Across explain.md, LEARNING_GUIDE.md, and documentation.md |
+| **v0.7.3** | [v8.1](#v81---synchronize-academic-group-details-at-readme-top) | 2026-11-05 | Academic Metadata Synchronization: Added Course, Faculty, and Student Group Details Table Prominently to the Top of README.md |
 | **v0.7.2** | [v7.2](#v72---render-academic-splash-screen-graphically-in-opengl-and-purge-bitmap-texture) | 2026-11-02 | Procedural Graphical Splash Screen: 100% Vector/Text Rendering in Modern OpenGL, Tables & Borders, Zero Disk Image Dependency |
 | **v0.7.1** | [v7.1](#v71---fix-opengl-header-order-conflict-in-msys2-and-restore-splash-screen-build) | 2026-11-02 | Build Fix: Resolved `#error OpenGL header already included` in MSYS2 by Ordering `<glad/glad.h>` Before `<GLFW/glfw3.h>` and Adding `GLFW_INCLUDE_NONE` |
 | **v0.7.0** | [v7.0](#v70---academic-intro-splash-screen-with-course-and-group-details-and-fade-transition) | 2026-11-02 | Academic Intro Splash Screen: Pre-Video Fade In-Out Proposal Presentation (Course CSE0611328, Faculty & Student Details), Bilinear Filtering & Fallback Procedural UI |
@@ -62,6 +64,20 @@ All entries in this changelog map directly to session archives recorded in [`/do
 ---
 
 ## Detailed Version Logs
+
+### [v0.7.4] - 2026-11-05
+#### Session Archive: [`v8.3 - Comprehensive Code Contexts and Documentation Synchronization.md`](/doc/prompts/v8.3%20-%20Comprehensive%20Code%20Contexts%20and%20Documentation%20Synchronization.md)
+* **Comprehensive Documentation & Code Context Synchronization**:
+  - Embedded granular root-relative code references and line numbers across [`/doc/explain.md`](/doc/explain.md), [`/doc/LEARNING_GUIDE.md`](/doc/LEARNING_GUIDE.md), and [`/doc/documentation.md`](/doc/documentation.md).
+  - Synchronized architectural guides with modern project structures: procedural graphical splash screen (`UIManager::renderSplashScreen`), Direction Arrow Relics and minigame exit gates, calibrated enemy spawn density (BOD 1-3, Slimes 2-4), 9.0m/4.0m spatial separation buffers, and 5.5s boss metamorphosis timing.
+  - Expanded Academic Viva Q&A in `explain.md` with Q7 (Procedural Academic Splash Screen) and Q8 (Direction Relics and Autonomous Direction Shifts).
+
+### [v0.7.3] - 2026-11-05
+#### Session Archive: [`v8.1 - Synchronize Academic Group Details at README Top.md`](/doc/prompts/v8.1%20-%20Synchronize%20Academic%20Group%20Details%20at%20README%20Top.md)
+* **Academic Proposal & Group Metadata Synchronization**:
+  - Integrated full academic course, faculty submission, and student group details directly to the top of [`/README.md`](/README.md).
+  - Synchronized course information (*Computer Graphics & Multimedia Lab - CSE0611328*, *Autumn 2026*, *Batch 55*, *Department of CSE*).
+  - Added formatted tables for course instructors (**Engineer Robiul Islam**, Assistant Professor, and **Tasneen Tanvir**, Lecturer) and student group members (**Gaus Saraf Murady** `0432410005101088`, **Lima Akter** `0432410005101063`, and **Fahima Akter** `0432410005101093`).
 
 ### [v0.7.2] - 2026-11-02
 #### Session Archive: [`v7.2 - Render Academic Splash Screen Graphically in OpenGL and Purge Bitmap Texture.md`](/doc/prompts/v7.2%20-%20Render%20Academic%20Splash%20Screen%20Graphically%20in%20OpenGL%20and%20Purge%20Bitmap%20Texture.md)

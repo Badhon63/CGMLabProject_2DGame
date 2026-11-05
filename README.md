@@ -1,8 +1,27 @@
 
 # The Wenderer: A Multi-Directional Endless Runner
 
-> Computer Graphics & Multimedia Lab Project (CSE0611328)  
-> Department of Computer Science & Engineering, UITS
+### 🎓 Academic Project Information
+- **Course Title**: Computer Graphics & Multimedia Lab
+- **Course Code**: CSE0611328
+- **Department**: Department of Computer Science & Engineering (CSE)
+- **Semester**: Autumn 2026
+- **Batch**: 55
+
+---
+
+### 👨‍🏫 Submitted to:
+| Teacher's Name | Designation |
+| :--- | :--- |
+| **Engineer Robiul Islam** | Assistant Professor |
+| **Tasneen Tanvir** | Lecturer |
+
+### 👥 Submitted by (Group Details):
+| Student's Name | Student ID | Forks | 
+| :--- | :--- | - |
+| **Gaus Saraf Murady** | `0432410005101088` | Root |
+| **Lima Akter** | `0432410005101063` | [Link](https://github.com/Badhon63/CGMLabProject_2DGame)  |
+| **Fahima Akter** | `0432410005101093` | |
 
 ---
 

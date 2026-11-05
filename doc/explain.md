@@ -34,81 +34,120 @@ Instead of dumping thousands of lines of code into one confusing file, the proje
 ---
 
 ### Block 1: `Common.h` — The Rulebook & Dictionary 📖
+* **File Location**: [`/include/Common.h`](/include/Common.h)
 * **What is it?**  
   The single shared header file included by every component in the engine. It contains game constants, physics values, and data structures.
 * **What does it do in simple terms?**
   - **Sets the Game Rules**: Defines gravity ($g = -22.0\,\text{m/s}^2$), jump impulse ($v_y = 11.2\,\text{m/s}$), horizontal run speed ($4.8\,\text{m/s}$), climb speed, slide speed, and elevation strata.
-  - **Defines Game Objects**: Defines structs for `PlatformTile`, `LadderTunnel`, `SteepSlope`, `SpikeTrap`, `DirectionRelic`, `AnimatedCoin`, `Enemy`, and `SpellHazard`.
-  - **Sets the UV Math Helpers**: Provides helper functions (`getTileUV`, `getCoinUV`, `getFruitUV`, `getShieldUV`) that calculate normalized coordinates on sprite sheets.
+  - **Defines Game Objects**: Defines structs for [`PlatformTile`](/include/Common.h#L122), [`LadderTunnel`](/include/Common.h#L137), [`SteepSlope`](/include/Common.h#L146), [`SpikeTrap`](/include/Common.h#L153), [`DirectionRelic`](/include/Common.h#L159), [`AnimatedCoin`](/include/Common.h#L167), [`EnemyEntity`](/include/Common.h#L206), and [`SpellHazard`](/include/Common.h#L236).
+  - **Sets the UV Math Helpers**: Provides helper functions ([`getTileUV`](/include/Common.h#L274), [`getCoinUV`](/include/Common.h#L303), [`getFruitUV`](/include/Common.h#L312), [`getDirectionArrowUV`](/include/Common.h#L314)) that calculate normalized coordinates on sprite sheets.
+
+```cpp
+// Core Direction Enum & Relic Structure (/include/Common.h)
+enum RunDirection { DIR_RIGHT, DIR_LEFT, DIR_UP, DIR_DOWN };
+
+struct DirectionRelic {
+  glm::vec2 pos;
+  float animPhase;
+  RunDirection targetDir;
+  bool collected;
+};
+```
 
 ---
 
 ### Block 2: `Renderer.h` / `Renderer.cpp` — The Digital Artist & Screen Projector 🎨
+* **File Location**: [`/include/Renderer.h`](/include/Renderer.h) & [`/src/Renderer.cpp`](/src/Renderer.cpp)
 * **What is it?**  
   The graphics engine. It takes world objects and draws them onto the computer screen using Modern OpenGL (3.3 Core Profile).
 * **How does it work in simple terms?**
   - **The "One Single Square" Trick (Instanced Quad Rendering)**:  
-    Instead of constantly allocating thousands of triangles, the graphics card stores **one single $1 \times 1$ unit square** (2 triangles, 6 vertices) in GPU memory (VAO/VBO). To draw any platform, coin, or character, the shader scales, rotates, and moves that single square using matrix mathematics.
+    Instead of constantly allocating thousands of triangles, the graphics card stores **one single $1 \times 1$ unit square** (2 triangles, 6 vertices) in GPU memory (VAO/VBO in [`/src/Renderer.cpp#L12-L35`](/src/Renderer.cpp#L12-L35)). To draw any platform, coin, or character, the shader scales, rotates, and moves that single square using matrix mathematics.
   - **The GLSL Shaders**:  
-    Custom GPU programs. The **Vertex Shader** transforms coordinates using the Model-View-Projection ($P \times V \times M$) matrix. The **Fragment Shader** samples colors from image textures and discards transparent pixels.
+    Custom GPU programs. The **Vertex Shader** transforms coordinates using the Model-View-Projection ($P \times V \times M$) matrix. The **Fragment Shader** samples colors from image textures and discards transparent pixels (`/src/Renderer.cpp#L37-L70`).
   - **Circular Energy Shield Math**:  
     Renders a glowing energy shield bubble around the player by calculating pixel distance from quad center in the fragment shader: $r = \sqrt{x^2 + y^2}$. Pixels with $r > 0.5$ are discarded, creating a perfect circular bubble without needing round 3D geometry!
+
+```cpp
+// Instanced Quad Draw Call (/src/Renderer.cpp)
+void Renderer::drawQuad(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection,
+                        const glm::vec4& color, bool useTexture, const glm::vec4& uvRect, GLuint textureID) {
+    glUseProgram(shaderProgram);
+    glm::mat4 mvp = projection * view * model;
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVP"), 1, GL_FALSE, glm::value_ptr(mvp));
+    // Bind uniforms & render unit quad
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+```
 
 ---
 
 ### Block 3: `World.h` / `World.cpp` — The Stage Builder & Architect 🏗️
+* **File Location**: [`/include/World.h`](/include/World.h) & [`/src/World.cpp`](/src/World.cpp)
 * **What is it?**  
   The procedural world generator. It continuously builds the stage ahead of the player as they explore.
 * **What does it do in simple terms?**
   - **The Endless Illusion**:  
-    The computer cannot store an infinite level in memory. `World.cpp` creates procedural chunks 35 meters ahead in both directions ($+X$ and $-X$) while automatically deleting chunks farther than 85 meters behind the player. This keeps memory flat and constant.
+    The computer cannot store an infinite level in memory. `World.cpp` creates procedural chunks 35 meters ahead in both directions ($+X$ and $-X$) while automatically deleting chunks farther than 85 meters behind the player ([`/src/World.cpp#L635-L665`](/src/World.cpp#L635-L665)). This keeps memory flat and constant.
   - **Multi-Elevation Strata**:  
     Generates 4 distinct vertical zones: Sky Canopy Tier ($Y \approx +5.5\text{m}$), Surface Platforms ($Y \approx +1.0$ to $+2.8\text{m}$), Surface Ground ($Y = -0.5\text{m}$), and Underground Caverns ($Y = -4.5\text{m}$).
   - **Bedrock Safety Floor**:  
     A continuous bedrock foundation at $Y = -7.5\text{m}$ guarantees zero out-of-bounds pit deaths. The only lethal hazards are spiky traps and enemy attacks!
-  - **Chasm Carving & Enemy Spacing**:  
-    Carves natural openings above steep cave dive slopes and enforces a guaranteed 12-meter separation between Bringer of Death and Slime spawns to prevent enemy crowding.
+  - **Procedural Enemy Spawning & Separation**:  
+    Procedurally populates each 35m chunk with 1–3 Bringer of Death wraiths and 2–4 Slimes ([`/src/World.cpp#L521-L632`](/src/World.cpp#L521-L632)), enforcing a guaranteed 9.0m separation buffer between enemy types to prevent spawn crowding.
+
+```cpp
+// Procedural Enemy Spawn Formulas (/src/World.cpp)
+int numBod = 1 + (std::rand() % 3);       // 1 to 3 Bringer of Death per 35m chunk
+int numSlimes = 2 + (std::rand() % 3);    // 2 to 4 Slimes per 35m chunk
+```
 
 ---
 
 ### Block 4: `Audio.h` / `Audio.cpp` — The Hybrid Sound Engine 🎵
+* **File Location**: [`/include/Audio.h`](/include/Audio.h) & [`/src/Audio.cpp`](/src/Audio.cpp)
 * **What is it?**  
   The department responsible for sound effects, creature voices, and background music.
 * **What makes it unique?**
   - **In-Memory Procedural Synthesizer**:  
-    Action sound effects (swords, shields, parries, footsteps, ladder taps, jumps, coin chimes) are generated directly from **mathematical formulas** (sine waves, harmonic envelopes, and white noise) into RAM buffers played via Windows Multimedia (`PlaySoundA`). No audio files can ever go missing or fail to load!
+    Action sound effects (swords, shields, parries, footsteps, ladder taps, jumps, coin chimes) are generated directly from **mathematical formulas** (sine waves, harmonic envelopes, and white noise) into RAM buffers played via Windows Multimedia (`PlaySoundA` in [`/src/Audio.cpp#L18-L230`](/src/Audio.cpp#L18-L230)). No audio files can ever go missing or fail to load!
     - **Sword Slash (`SFX_SLASH`)**: Sharp aerodynamic whoosh ($2400 \rightarrow 320\,\text{Hz}$) with steel ring harmonics ($3250\,\text{Hz}, 4950\,\text{Hz}$).
     - **Katana Defend / Parry Clang (`SFX_BLOCK`)**: Sharp metallic impulse click plus dual resonant ringing bells ($2850\,\text{Hz}$ and $4150\,\text{Hz}$) with slow decay.
   - **Hardware-Accelerated Streaming (Windows MCI)**:  
-    For longer compositions, Windows Media Control Interface (`mciSendStringA`) streams background music (`Quarter_in_the_Slot.mp3` with `[M]` mute control) and multi-phase creature audio (3-phase Demon Slime metamorphosis and thunder strikes).
+    For longer compositions, Windows Media Control Interface (`mciSendStringA` in [`/src/Audio.cpp#L235-L270`](/src/Audio.cpp#L235-L270)) streams background music (`Quarter_in_the_Slot.mp3` with `[M]` mute control) and multi-phase creature audio (3-phase Demon Slime metamorphosis and thunder strikes).
 
 ---
 
 ### Block 5: `UIManager.h` / `UIManager.cpp` — The Presenter & HUD System 📊
+* **File Location**: [`/include/UIManager.h`](/include/UIManager.h) & [`/src/UIManager.cpp`](/src/UIManager.cpp)
 * **What is it?**  
-  A dedicated thread-safe singleton managing on-screen telemetry, floating combat text, modals, and menus.
+  A dedicated thread-safe singleton managing on-screen telemetry, floating combat text, modals, menus, and the academic intro splash screen.
 * **What does it handle?**
-  - **Score & Health HUD**: Displays score, coins, distance, 3 animated heart life pips, and real-time Guard/Defend status (`[GUARD: ACTIVE]` or cooldown `[DEF: X.Xs]`).
+  - **Procedural Academic Splash Screen**: Renders course metadata, faculty credentials, and student group IDs purely via OpenGL vector primitives ([`/src/UIManager.cpp#L68-L230`](/src/UIManager.cpp#L68-L230)) with fade-in/fade-out alpha interpolation.
+  - **Score & Health HUD**: Displays score, coins, distance, 3 animated heart life pips, and real-time Guard/Defend status (`[GUARD: ACTIVE]` or cooldown `[DEF: X.Xs]` in [`/src/UIManager.cpp#L340-L400`](/src/UIManager.cpp#L340-L400)).
   - **Floating World-Space Combat Text**: Animates rising numbers and badges (`+50`, `[PARRY]`, `CRITICAL!`, `BLOCKED!`).
-  - **Overhead Enemy Health Bars**: Segmented health bars floating above roaming enemies showing exact HP slices.
+  - **Overhead Enemy Health Bars**: Segmented health bars floating above roaming enemies showing exact HP slices ([`/src/UIManager.cpp#L260-L310`](/src/UIManager.cpp#L260-L310)).
   - **Pause Menu & Tutorial Modal**: Glassmorphic modal overlays explaining game lore, full controls, and gameplay rules.
 
 ---
 
 ### Block 6 & 7: `LadderScene` & `SkyFallScene` — Mini-Game Trials 🧗🪂
+* **File Locations**: [`/src/LadderScene.cpp`](/src/LadderScene.cpp) & [`/src/SkyFallScene.cpp`](/src/SkyFallScene.cpp)
 * **What are they?**  
   Dedicated mini-game scenes that challenge the player whenever a vertical direction shift occurs:
   - **`LadderScene` (Upward Shift)**: 3 parallel climbing tracks with alternating sawblades, moving spikes, and climbing shields.
   - **`SkyFallScene` (Downward Shift)**: High-speed aerial free-fall dive with steering controls to dodge raptor birds and floating spike mines.
-  - **Exit Predictability**: Both trials feature a 15-second survival timer (`SURVIVE UNTIL EXIT: XX.Xs`) and a prominent glowing `=== EXIT APPEARED! ===` banner before directional arrow relics spawn to return the player to the runner.
+  - **Exit Predictability & Arrowhead Relics**: Both trials feature a 15-second survival timer (`SURVIVE UNTIL EXIT: XX.Xs`) and a prominent glowing `=== EXIT APPEARED! ===` banner before directional arrow relics spawn ahead on the tracks ([`/src/LadderScene.cpp#L74-L78`](/src/LadderScene.cpp#L74-L78) and [`/src/SkyFallScene.cpp#L98-L108`](/src/SkyFallScene.cpp#L98-L108)) to return the player to the runner.
 
 ---
 
 ### Block 8: `VideoPlayer.h` / `VideoPlayer.cpp` — The Cinematic Intro 🎥
+* **File Location**: [`/include/VideoPlayer.h`](/include/VideoPlayer.h) & [`/src/VideoPlayer.cpp`](/src/VideoPlayer.cpp)
 * **What is it?**  
   An in-engine hardware-accelerated video player using Microsoft Media Foundation (`MFStartup`, `IMFSourceReader`).
 * **What does it do?**
-  - Streams and decodes the introductory cinematic video (`intro.mp4`) directly into an OpenGL texture.
+  - Streams and decodes the introductory cinematic video (`introVid.mp4`) directly into an OpenGL texture.
   - Synchronizes video presentation timestamps (PTS) with audio playback and allows skipping via `Space`, `Enter`, or `Esc`.
 
 ---
@@ -308,4 +347,18 @@ Combined with an **Orthographic Projection Matrix** (`glm::ortho(-8.0, 8.0, -4.5
 
 ### Q6: How does the game manage endless world generation without running out of RAM?
 > **Answer**:  
-> Through **Procedural Generation and Dynamic Chunk Pruning**. The engine generates level chunks $35\,\text{m}$ ahead in both directions ($+X$ and $-X$). As the player moves, any chunks farther than $85\,\text{m}$ behind are pruned from memory arrays. This bounds active memory to a constant footprint.
+> Through **Procedural Generation and Dynamic Chunk Pruning** in [`/src/World.cpp`](/src/World.cpp#L635-L665). The engine generates level chunks $35\,\text{m}$ ahead in both directions ($+X$ and $-X$). As the player moves, any chunks farther than $85\,\text{m}$ behind are pruned from memory arrays. This bounds active memory to a constant footprint.
+
+### Q7: How does the game render the Academic Intro Splash Screen without external image files?
+> **Answer**:  
+> Through **Procedural Modern OpenGL Vector & Font Rendering** in [`/src/UIManager.cpp#L68-L230`](/src/UIManager.cpp#L68-L230):
+> 1. The presentation card, borders, title underlines, and table lines for instructors and group members are rendered as scaled unit quads using matrix math (`glm::scale` and `glm::translate`).
+> 2. Typography is rendered directly from an embedded 8x8 bitmap font ([`/include/font8x8_basic.h`](/include/font8x8_basic.h)), eliminating external image dependencies.
+> 3. Fade transitions are calculated via piece-wise linear alpha interpolation ($\alpha(t) = \frac{t}{T_{\text{in}}}$), modulating quad colors cleanly before launching the intro video.
+
+### Q8: How do the Direction Arrow Relics control the multi-directional mechanics?
+> **Answer**:  
+> Direction relics ([`DirectionRelic`](/include/Common.h#L159)) store target vectors (`DIR_LEFT`, `DIR_RIGHT`, `DIR_UP`, `DIR_DOWN`) and floating animation phases. When the player intersects their $1.1\times 1.1\,\text{m}$ hitbox ([`/src/main.cpp#L1230-L1246`](/src/main.cpp#L1230-L1246)):
+> 1. Horizontal relics (`DIR_LEFT`/`DIR_RIGHT`) invert running velocity, swap player facing direction, and switch biome themes.
+> 2. Vertical relics (`DIR_UP`/`DIR_DOWN`) trigger transitions into dedicated mini-game scenes ([`LadderScene`](/src/LadderScene.cpp) or [`SkyFallScene`](/src/SkyFallScene.cpp)).
+> 3. Inside mini-games, Left/Right arrow relics spawn after a 15-second survival cooldown to serve as return exit gates back to the platformer world.

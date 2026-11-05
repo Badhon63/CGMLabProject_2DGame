@@ -93,60 +93,51 @@ $$\text{MVP} = P \times V \times M$$
 
 ---
 
-## 3. Recommended Project File Structure
+## 3. Actual Project Architecture & Code Organization
 
-Here is a clean, modular structure for the C++ project:
+The engine is partitioned into 8 modular, decoupled subsystems with strict separation of concerns:
 
 ```text
 CGMLabProject_2DGame/
 │
-├── assets/                  # Game assets
-│   ├── audio/              # Sound effects (jump.wav, turn.wav, crash.wav)
-│   ├── fonts/              # Font files (if rendering text)
-│   └── textures/           # Spritesheets (player.png, tiles.png, obstacles.png)
+├── include/                 # Header declarations, constants & UV math
+│   ├── Common.h            # [/include/Common.h](/include/Common.h): Shared structs, physics constants & UV helpers
+│   ├── Audio.h             # [/include/Audio.h](/include/Audio.h): Procedural audio synthesizer & MCI streaming interface
+│   ├── Renderer.h          # [/include/Renderer.h](/include/Renderer.h): Modern OpenGL shader compilation & quad draw pipeline
+│   ├── World.h             # [/include/World.h](/include/World.h): Procedural generation, streaming & collision interface
+│   ├── UIManager.h         # [/include/UIManager.h](/include/UIManager.h): Singleton HUD, floating text, enemy health bars & splash
+│   ├── LadderScene.h       # [/include/LadderScene.h](/include/LadderScene.h): 3-track vertical ladder jumping mini-game
+│   ├── SkyFallScene.h      # [/include/SkyFallScene.h](/include/SkyFallScene.h): Aerial free-fall diving mini-game
+│   ├── VideoPlayer.h       # [/include/VideoPlayer.h](/include/VideoPlayer.h): Microsoft Media Foundation video player
+│   └── font8x8_basic.h     # [/include/font8x8_basic.h](/include/font8x8_basic.h): 8x8 monochrome bitmap font for vector text
 │
-├── doc/                     # Documentation and research papers
-│   ├── LEARNING_GUIDE.md   # This guided documentation
-│   ├── prompts/            # Prompts and notes
-│   └── research/           # Research PDFs and proposals
+├── src/                     # Core engine implementations
+│   ├── Audio.cpp           # [/src/Audio.cpp](/src/Audio.cpp): Procedural PCM synthesis & Windows MCI streaming
+│   ├── Renderer.cpp        # [/src/Renderer.cpp](/src/Renderer.cpp): Reusable unit quad VAO/VBO & GLSL shader program
+│   ├── World.cpp           # [/src/World.cpp](/src/World.cpp): Procedural chunk generator, spike clusters & enemy spawns
+│   ├── UIManager.cpp       # [/src/UIManager.cpp](/src/UIManager.cpp): Procedural academic splash screen, HUD & health bars
+│   ├── LadderScene.cpp     # [/src/LadderScene.cpp](/src/LadderScene.cpp): Ladder climbing physics, traps & exit arrowheads
+│   ├── SkyFallScene.cpp    # [/src/SkyFallScene.cpp](/src/SkyFallScene.cpp): Free-fall diving physics, obstacles & exit gates
+│   ├── VideoPlayer.cpp     # [/src/VideoPlayer.cpp](/src/VideoPlayer.cpp): Media Foundation decoder & OpenGL texture sync
+│   ├── main.cpp            # [/src/main.cpp](/src/main.cpp): Master game loop, player state machine & input handling
+│   └── glad.c              # [/src/glad.c](/src/glad.c): OpenGL 3.3 function loader
 │
-├── include/                 # Header files (.h / .hpp)
-│   ├── Camera.h            # Camera follow, rotation, and screen shake
-│   ├── Collision.h         # AABB bounding-box collision math
-│   ├── Game.h              # Main Game class: loop, state, update, render
-│   ├── Obstacle.h          # Obstacle structs and manager
-│   ├── Player.h            # Player state, movement vector, input
-│   ├── Renderer.h          # Quad VAO/VBO setup, draw calls
-│   ├── Shader.h            # GLSL shader compiler and uniform helpers
-│   └── Texture.h           # stb_image wrapper for 2D textures
+├── assets/                  # Spritesheets, textures, audio & video
+│   ├── samurai/            # Samurai Mack spritesheets (Run, Idle, Attack1, Defend_nobg)
+│   ├── enemies/            # Bringer of Death & Slimes (idle, move, transform, demon)
+│   ├── world_tileset.png   # Brackeys 256x256 tileset (grass, dirt, ladders, spikes)
+│   ├── introVid.mp4        # Introductory cinematic video
+│   └── Quarter_in_the_Slot.mp3 # Looping background music
 │
-├── src/                     # Source files (.cpp)
-│   ├── Camera.cpp
-│   ├── Collision.cpp
-│   ├── Game.cpp
-│   ├── Obstacle.cpp
-│   ├── Player.cpp
-│   ├── Renderer.cpp
-│   ├── Shader.cpp
-│   ├── Texture.cpp
-│   └── main.cpp            # Entry point: window creation & game loop
+├── doc/                     # Documentation, learning guides & session archives
+│   ├── LEARNING_GUIDE.md   # [/doc/LEARNING_GUIDE.md](/doc/LEARNING_GUIDE.md): This comprehensive learning guide
+│   ├── explain.md          # [/doc/explain.md](/doc/explain.md): Academic viva & code explanation guide
+│   ├── documentation.md    # [/doc/documentation.md](/doc/documentation.md): Technical progress documentation
+│   ├── changelog.md        # [/doc/changelog.md](/doc/changelog.md): Complete project version history
+│   └── prompts/            # [/doc/prompts/](/doc/prompts/): Session prompt archives (v1.0 - v8.x)
 │
-├── shaders/                 # GLSL Shader programs
-│   ├── basic.vert          # Vertex shader for quad transformation (MVP)
-│   ├── basic.frag          # Fragment shader for solid colors
-│   ├── sprite.vert         # Vertex shader with UV offsets for sprite animation
-│   └── sprite.frag         # Fragment shader for textured quads
-│
-├── vendor/                  # Third-party dependencies
-│   ├── glad/               # OpenGL loader (glad.c and glad/glad.h)
-│   ├── glfw/               # Windowing library headers & libs
-│   ├── glm/                # OpenGL Mathematics header-only library
-│   ├── stb_image/          # Single header image loader (stb_image.h)
-│   └── miniaudio/          # Single header audio library (miniaudio.h)
-│
-├── CMakeLists.txt           # Build script (if using CMake)
-├── README.md                # Project summary
-└── .gitignore               # Git ignore rules for build artifacts
+├── Makefile                 # Unified build script (WinMM, OpenGL32, GLFW3, GDI32, MFPlat)
+└── README.md                # [/README.md](/README.md): Quick start, controls & academic group details
 ```
 
 ---
@@ -740,6 +731,43 @@ In academic capstone and lab submissions, displaying course context, university 
   If the texture asset `assets/splash.png` is unavailable, `UIManager::renderSplashScreen` automatically switches to an in-engine vector card rendering all course details, faculty listings, and student IDs using `Renderer::drawText` and colored quads.
 - **Audio Lifecycle Decoupling**:
   `VideoPlayer::open()` immediately initiates audio playback via Windows Multimedia (`PlaySoundA`). By deferring `introVideoPlayer.open()` until the splash screen completes, audio desynchronization and audio overlapping are completely eliminated.
+
+19. **100% Procedural Vector-Based Academic Splash Screen (`v0.7.2`)**:
+    - **Zero Disk Image Dependency**:
+      - Purged the bitmap texture `assets/splash.png` completely from disk dependencies and VRAM allocation.
+      - Rebuilt the entire splash card in [`/src/UIManager.cpp#L68-L230`](/src/UIManager.cpp#L68-L230) using modern OpenGL primitives:
+        - Deep slate presentation card ($15.6\,\text{m} \times 8.6\,\text{m}$) with soft drop shadow and cyan accent stripe.
+        - Table bounding quads, header fills, column partition borders, and row separators drawn as thin colored quads.
+        - Typography rendered directly through the embedded 8x8 bitmap font ([`/include/font8x8_basic.h`](/include/font8x8_basic.h)).
+    - **Academic Provenance Metadata**:
+      - Displays Course (*Computer Graphics & Multimedia Lab - CSE0611328*), Faculty (*Engineer Robiul Islam - Assistant Professor* & *Tasneen Tanvir - Lecturer*), and Student Group Members (*Gaus Saraf Murady 0432410005101088*, *Lima Akter 0432410005101063*, *Fahima Akter 0432410005101093*).
+      - Synced directly to the academic header at the top of [`/README.md`](/README.md).
+
+20. **Direction Arrow Relics, Autonomous Warps & Minigame Return Gates (`v0.5.7`, `v0.5.8`)**:
+    - **Direction Relic Architecture**:
+      - Defined by `DirectionRelic` in [`/include/Common.h#L159`](/include/Common.h#L159), storing target direction (`DIR_LEFT`, `DIR_RIGHT`, `DIR_UP`, `DIR_DOWN`) and animation phase.
+      - Generated procedurally on elevated perches in [`/src/World.cpp#L425-L435`](/src/World.cpp#L425-L435) and starting platforms ([`/src/World.cpp#L215-L224`](/src/World.cpp#L215-L224)).
+    - **Color Tinting & Glowing Auras**:
+      - Implemented in [`/src/main.cpp#L2160-L2184`](/src/main.cpp#L2160-L2184):
+        - `DIR_LEFT`: Radiant Orange aura `glm::vec4(1.0f, 0.55f, 0.15f, 0.35f)`
+        - `DIR_RIGHT`: Electric Cyan aura `glm::vec4(0.1f, 0.85f, 1.0f, 0.35f)`
+        - `DIR_UP`: Emerald Green aura `glm::vec4(0.2f, 0.95f, 0.45f, 0.35f)`
+        - `DIR_DOWN`: Golden Amber aura `glm::vec4(1.0f, 0.85f, 0.2f, 0.35f)`
+    - **Minigame Return Gate Mechanism**:
+      - Inside mini-games ([`/src/LadderScene.cpp#L74-L78`](/src/LadderScene.cpp#L74-L78) and [`/src/SkyFallScene.cpp#L98-L108`](/src/SkyFallScene.cpp#L98-L108)), collecting Left or Right direction relics after the 15-second survival window immediately exits the minigame and returns the player safely to the horizontal runner.
+
+21. **Calibrated Enemy Spawn Density, Strata Distribution & Spatial Buffering (`v0.6.12`, `v0.6.14`)**:
+    - **Procedural Spawn Formulas**:
+      - In [`/src/World.cpp#L521-L632`](/src/World.cpp#L521-L632), each 35-meter world chunk dynamically spawns:
+        - **Bringer of Death**: `int numBod = 1 + (std::rand() % 3);` (1 to 3 per chunk).
+        - **Initial Slimes**: `int numSlimes = 2 + (std::rand() % 3);` (2 to 4 per chunk).
+    - **Vertical Strata Distribution**:
+      - `bool inCavern = (std::rand() % 3 == 0);`: 33% chance to spawn in subterranean caverns ($Y = -4.5\text{m}$), 67% chance on surface ground ($Y = -0.5\text{m}$).
+    - **Distance Clearance Buffering**:
+      - `dx < 9.0f`: Minimum 9.0m horizontal buffer between Bringer of Death and Slimes on the same elevation.
+      - `dx < 4.0f`: Minimum 4.0m buffer between individual Slimes, preventing cluttered clumping.
+    - **Boss Metamorphosis Countdown**:
+      - When an Initial Slime reaches 0 HP, it enters a 5.5-second metamorphosis timer in [`/src/main.cpp#L1564-L1578`](/src/main.cpp#L1564-L1578), playing sequenced audio (splat $\rightarrow$ acid $\rightarrow$ dying roar) before ascending into the 5-HP Boss Demon Slime.
 
 ---
 
